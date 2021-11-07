@@ -1,26 +1,12 @@
-<script>
-export default {
-  async asyncData({ params, $sanity }) {
-    console.log(params) // { slug: "hello-world" }
-  }
-}
-</script>
-
 <template>
   <div class="container">
-    <div>
-      <h1 class="title">
-        My Blog
-      </h1>
-    </div>
-    <div class="posts">
-      <div v-for="post in posts" :key="post._id">
-        <h2><a v-bind:href="post.slug.current" v-text="post.title" /></h2>
-        <div class="summary">
-          <block-content :blocks="post.body[0]" v-bind:key="post.body[0]._id" v-if="post.body.length" />
-        </div>
+    <div v-if="post">
+      <h1 class="title" v-text="post.title" />
+      <div class="content">
+        <block-content :blocks="child" v-for="child in post.body" :key="child._id" />
       </div>
     </div>
+    <h4><a href="/">← Go back</a></h4>
   </div>
 </template>
 
@@ -28,11 +14,11 @@ export default {
 import { groq } from '@nuxtjs/sanity'
 
 export default {
-  async asyncData({ $sanity }) {
-    const query = groq`*[_type == "post"]`
-    const posts = await $sanity.fetch(query)
-    return { posts }
-  },
+  async asyncData({ params, $sanity }) {
+    const query = groq`*[_type == "post" && slug.current == "${params.slug}"][0]`
+    const post = await $sanity.fetch(query)
+    return { post }
+  }
 }
 </script>
 
@@ -41,8 +27,11 @@ export default {
   margin: 2rem;
   min-height: 100vh;
 }
-.posts {
+
+.content {
   margin: 2rem 0;
+  max-width: 38rem;
 }
-.summary { margin-top: 0.5rem; }
+
+p { margin: 1rem 0; }
 </style>
